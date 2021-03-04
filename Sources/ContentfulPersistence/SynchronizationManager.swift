@@ -107,7 +107,7 @@ public class SynchronizationManager: PersistenceIntegration {
         self.localeCodes = localeCodes
     }
 
-    typealias SyncTask = (URLSessionTask) -> Void
+    public typealias SyncTask = (URLSessionDataTask?) -> Void
     /**
      A wrapper method to synchronize data from Contentful to your local data store. The callback for this
      method is thread safe and will delegate to the thread that your data store is tied to.
@@ -129,7 +129,7 @@ public class SynchronizationManager: PersistenceIntegration {
             }
         }
 
-        let task: URLSessionTask
+        let task: URLSessionDataTask?
         if let syncToken = self.syncToken {
             task = client?.sync(for: SyncSpace(syncToken: syncToken, limit: limit), then: safeCompletion)
         } else {
