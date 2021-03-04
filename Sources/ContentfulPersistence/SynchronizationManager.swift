@@ -118,7 +118,7 @@ public class SynchronizationManager: PersistenceIntegration {
      */
     public func sync(limit: Int? = nil, syncTask: SyncTask? = nil, then completion: @escaping ResultsHandler<SyncSpace>) {
         resolveCachedRelationships { [weak self] in
-            self?.syncSafely(limit: limit, then: completion)
+            self?.syncSafely(limit: limit, syncTask: syncTask, then: completion)
         }
     }
 
