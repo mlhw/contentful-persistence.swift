@@ -107,6 +107,7 @@ public class SynchronizationManager: PersistenceIntegration {
         self.localeCodes = localeCodes
     }
 
+    typealias SyncTask = (URLSessionTask) -> Void
     /**
      A wrapper method to synchronize data from Contentful to your local data store. The callback for this
      method is thread safe and will delegate to the thread that your data store is tied to.
@@ -115,24 +116,26 @@ public class SynchronizationManager: PersistenceIntegration {
 
      - parameter limit: Number of elements per page. See documentation for details.
      */
-    public func sync(limit: Int? = nil, then completion: @escaping ResultsHandler<SyncSpace>) {
+    public func sync(limit: Int? = nil, syncTask: SyncTask? = nil, then completion: @escaping ResultsHandler<SyncSpace>) {
         resolveCachedRelationships { [weak self] in
             self?.syncSafely(limit: limit, then: completion)
         }
     }
 
-    private func syncSafely(limit: Int?, then completion: @escaping ResultsHandler<SyncSpace>) {
+    private func syncSafely(limit: Int?, syncTask: SyncTask? = nil, then completion: @escaping ResultsHandler<SyncSpace>) {
         let safeCompletion: ResultsHandler<SyncSpace> = { [weak self] result in
             self?.persistentStore.performBlock {
                 completion(result)
             }
         }
 
+        let task: URLSessionTask
         if let syncToken = self.syncToken {
-            client?.sync(for: SyncSpace(syncToken: syncToken, limit: limit), then: safeCompletion)
+            task = client?.sync(for: SyncSpace(syncToken: syncToken, limit: limit), then: safeCompletion)
         } else {
-            client?.sync(for: SyncSpace(limit: limit), then: safeCompletion)
+            task = client?.sync(for: SyncSpace(limit: limit), then: safeCompletion)
         }
+        syncTask?(task)
     }
 
     /// The Contentful.Client that is configured to retrieve data from your Contentful space.
